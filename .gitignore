@@ -1,0 +1,12 @@
+.vs
+.github
+.vscode
+out
+build
+opencv
+seeso
+media
+cmake-build-release-visual-studio
+seesolog
+utils
+.idea
