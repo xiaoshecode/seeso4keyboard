@@ -102,7 +102,7 @@ namespace sample
             std::cerr << "Failed to write row\n";
     }
 
-    bool TrackerManager::initialize(const std::string &license_key, const SeeSoStatusModuleOptions &status_option)
+    bool TrackerManager::initialize(const std::string &license_key, const SeeSoStatusModuleOptions &status_option,const std::vector<float>& data)
     {
         const auto code = gaze_tracker_.initialize(license_key, status_option);
         if (code != 0)
@@ -119,6 +119,7 @@ namespace sample
         // Attach callbacks to seeso::GazeTracker
         gaze_tracker_.setGazeCallback(this);
         gaze_tracker_.setCalibrationCallback(this);
+        gaze_tracker_.setCalibrationData(data);
         gaze_tracker_.setUserStatusCallback(this);
 
         logger_.add_header("timestamp");

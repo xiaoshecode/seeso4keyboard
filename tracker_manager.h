@@ -26,7 +26,7 @@ namespace sample
     public:
         TrackerManager() = default;
 
-        bool initialize(const std::string &license_key, const SeeSoStatusModuleOptions &status_option);
+        bool initialize(const std::string &license_key, const SeeSoStatusModuleOptions &status_option,const std::vector<float>& data);
 
         void setDefaultCameraToDisplayConverter(const seeso::DisplayInfo &display_info);
 

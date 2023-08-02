@@ -55,6 +55,15 @@ int main()
 	// Set additional feature(user status) options
 	SeeSoStatusModuleOptions user_status_options{ kSeeSoTrue, kSeeSoTrue, kSeeSoTrue };
 
+    using namespace std;
+    ifstream f("calibration_data.txt",ios::in);
+    vector<float> savedData;
+    string ddata;
+    float dddata;
+    while (getline(f,ddata)){
+        dddata = stof(ddata);
+        savedData.push_back(dddata);
+    }
 	// Authenticate and initialize GazeTracker
 	auto code = tracker_manager->initialize(license_key, user_status_options);
 	if (!code)
@@ -120,9 +129,9 @@ int main()
             //save calibration data to file
             using namespace std;
             ofstream f("calibration_data.txt",ios::trunc);
-            f<<user<<endl;
-            for(int i=0;i<data.size();++i){
-                f<<data[i]<<"\n";
+//            f<<user<<endl;
+            for(float i : data){
+                f<<i<<"\n";
             }
             cout<<"\n"<<"successfully save calibration data to file\n";
             f.close();
