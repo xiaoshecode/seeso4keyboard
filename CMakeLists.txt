@@ -10,6 +10,7 @@ if(SEESO_SUPPORT_TESTS_ONLY)
     add_executable(seeso_support_test tests/support_test.cpp priority_mutex.cc)
     target_include_directories(seeso_support_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
     add_test(NAME support COMMAND seeso_support_test)
+    set_tests_properties(support PROPERTIES TIMEOUT 15)
     return()
 endif()
 

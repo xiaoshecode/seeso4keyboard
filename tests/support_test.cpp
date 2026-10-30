@@ -24,6 +24,22 @@ int main() {
   assert(mutex.try_to_lock_low());
   mutex.unlock_low();
 
+  // Low-priority blocking acquisition must keep progressing while another
+  // thread repeatedly makes nonblocking high-priority attempts.
+  std::atomic_bool start{false};
+  std::thread low_waiter([&] {
+    while (!start.load()) std::this_thread::yield();
+    for (int i = 0; i < 10000; ++i) {
+      mutex.lock_low();
+      mutex.unlock_low();
+    }
+  });
+  start.store(true);
+  for (int i = 0; i < 10000; ++i) {
+    if (mutex.try_to_lock_high()) mutex.unlock_high();
+  }
+  low_waiter.join();
+
   int total = 0;
   sample::signal<void(int)> signal;
   auto connection = signal.connect([&](int value) { total += value; });
