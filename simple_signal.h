@@ -7,6 +7,8 @@
 #ifndef SEESO_SAMPLE_SIMPLE_SIGNAL_H_
 #define SEESO_SAMPLE_SIMPLE_SIGNAL_H_
 
+#include <atomic>
+#include <functional>
 #include <list>
 #include <memory>
 #include <mutex>

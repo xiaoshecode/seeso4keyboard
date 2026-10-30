@@ -93,7 +93,7 @@ namespace sample
     void TrackerManager::OnCalibrationFinish(const std::vector<float> &calib_data)
     {
         on_calib_finish_(calib_data);
-        calibrating_.store(true, std::memory_order_release);
+        calibrating_.store(false, std::memory_order_release);
         calibrated_ = true;
         std::vector<std::string> row;
         row.resize(1);
@@ -119,7 +119,10 @@ namespace sample
         // Attach callbacks to seeso::GazeTracker
         gaze_tracker_.setGazeCallback(this);
         gaze_tracker_.setCalibrationCallback(this);
-        gaze_tracker_.setCalibrationData(data);
+        if (!data.empty()) {
+            gaze_tracker_.setCalibrationData(data);
+            calibrated_ = true;
+        }
         gaze_tracker_.setUserStatusCallback(this);
 
         logger_.add_header("timestamp");

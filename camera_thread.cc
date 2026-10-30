@@ -21,17 +21,12 @@ namespace sample
 
     CameraThread::~CameraThread()
     {
-        writer_->release();
         join();
+        writer_.release();
     }
 
     bool CameraThread::run(int camera_index)
     {
-        if (camera_index == camera_index_)
-        {
-            resume();
-        }
-
         auto lck = pause_wait();
         camera_index_ = camera_index;
         if (!check_status())
@@ -75,8 +70,13 @@ namespace sample
 
             if (stop_)
                 break;
-            video_ >> frame_; //TO Do
-            (*writer_) << frame_;
+            if (!video_.read(frame_) || frame_.empty()) {
+                std::cerr << "Camera stream ended or failed.\n";
+                pause_ = true;
+                continue;
+            }
+            if (writer_.isOpened())
+                writer_ << frame_;
             on_frame_(std::move(frame_));
         }
     }
@@ -93,8 +93,7 @@ namespace sample
 
     bool CameraThread::check_status()
     {
-//        video_.open(camera_index_);
-        video_.open(R"(C:\Projects\sweyepe\SweyepeBoardPC\study\new_study\rec\1_dwell_Aug--1-12-40-06-2023.avi)");
+        video_.open(camera_index_);
         if (!video_.isOpened())
         {
             std::cerr << "Failed to open camera\n";
@@ -106,11 +105,11 @@ namespace sample
             return false;
         }
 
-        std::string video_file = "C:/data/videos" + std::to_string((int)time(0)) + ".avi";
+        std::string video_file = "recording-" + std::to_string((int)time(0)) + ".avi";
         auto fps = video_.get(cv::VideoCaptureProperties::CAP_PROP_FPS);
         auto cap_w = video_.get(cv::VideoCaptureProperties::CAP_PROP_FRAME_WIDTH);
         auto cap_h = video_.get(cv::VideoCaptureProperties::CAP_PROP_FRAME_HEIGHT);
-        writer_ = new cv::VideoWriter(video_file, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), 25, cv::Size(cap_w, cap_h), true);
+        writer_.open(video_file, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), 25, cv::Size(cap_w, cap_h), true);
         printf("%d FPS, <%d,%d>", 25, static_cast<int>(cap_w), static_cast<int>(cap_h));
         return true;
     }

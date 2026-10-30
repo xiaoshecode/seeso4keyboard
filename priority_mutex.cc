@@ -62,12 +62,10 @@ void PriorityMutex::unlock_high() {
 }
 
 bool PriorityMutex::try_to_lock_high() {
-  ++high_accessing_;
-  if (m_.try_lock()) {
-    --high_accessing_;
-    return true;
-  }
-  return false;
+  // A nonblocking attempt never joins the queue of waiting high-priority users.
+  // A transient counter increment can park a low-priority waiter with nobody
+  // left to notify it when this attempt fails.
+  return m_.try_lock();
 }
 
 PriorityMutex::HighMutex& PriorityMutex::high() {

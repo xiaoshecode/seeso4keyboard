@@ -44,7 +44,7 @@ namespace sample
         cv::VideoCapture video_;
         cv::Mat frame_;
 
-        cv::VideoWriter* writer_;
+        cv::VideoWriter writer_;
 
         std::thread thread_;
         std::atomic_bool pause_{true};
