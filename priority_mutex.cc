@@ -63,11 +63,9 @@ void PriorityMutex::unlock_high() {
 
 bool PriorityMutex::try_to_lock_high() {
   ++high_accessing_;
-  if (m_.try_lock()) {
-    --high_accessing_;
-    return true;
-  }
-  return false;
+  const bool acquired = m_.try_lock();
+  --high_accessing_;
+  return acquired;
 }
 
 PriorityMutex::HighMutex& PriorityMutex::high() {

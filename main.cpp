@@ -1,4 +1,8 @@
 #include <iostream>
+#include <cstdlib>
+#include <fstream>
+#include <string>
+#include <vector>
 #include <thread>
 #include <stdexcept>
 #include <memory>
@@ -12,13 +16,6 @@
 #include "view.h"
 #include "camera_thread.h"
 
-#ifdef SEESO_TEST_KEY
-#define SEESO_STRINGFY_IMPL(x) #x
-#define SEESO_STRINGFY(x) SEESO_STRINGFY_IMPL(x)
-const char* license_key = SEESO_STRINGFY(SEESO_TEST_KEY);
-#else
-const char* license_key = "dev_1mcx8c720zkayearfoj0dr4bf49q7j2jpymx6q8e";
-#endif
 const char* user="xiaoshe";
 // This project is a GUI(using OpenCV) example using SeeSo SDK
 // See https://docs.seeso.io/docs for more information
@@ -27,6 +24,11 @@ void printDisplays(const std::vector<seeso::DisplayInfo>& displays);
 
 int main()
 {
+    const char* license_key = std::getenv("SEESO_LICENSE_KEY");
+    if (!license_key || !*license_key) {
+        std::cerr << "Set SEESO_LICENSE_KEY before starting the application.\n";
+        return EXIT_FAILURE;
+    }
 	// Initialize a SeeSo library
 	// This must be called before calling any other seeso functions
 	try
@@ -60,12 +62,17 @@ int main()
     vector<float> savedData;
     string ddata;
     float dddata;
-    while (getline(f,ddata)){
-        dddata = stof(ddata);
-        savedData.push_back(dddata);
+    try {
+        while (getline(f, ddata)) {
+            dddata = stof(ddata);
+            savedData.push_back(dddata);
+        }
+    } catch (const std::exception&) {
+        std::cerr << "Ignoring invalid calibration_data.txt; recalibrate with C.\n";
+        savedData.clear();
     }
 	// Authenticate and initialize GazeTracker
-	auto code = tracker_manager->initialize(license_key, user_status_options);
+	auto code = tracker_manager->initialize(license_key, user_status_options, savedData);
 	if (!code)
 		return EXIT_FAILURE;
 
@@ -161,13 +168,13 @@ int main()
 	// 2. Pass the frame and the current timestamp in milliseconds to the SeeSo SDK
 	camera_thread.on_frame_.connect([=](const cv::Mat& frame)
 		{
-			static auto cvt = new cv::Mat();
+			static cv::Mat cvt;
 			static const auto current_time = [] {
 				using clock = std::chrono::steady_clock;
 				return std::chrono::duration_cast<std::chrono::milliseconds>(clock::now().time_since_epoch()).count();
 			};
-			cv::cvtColor(frame, *cvt, cv::COLOR_BGR2RGB);
-			tracker_manager_ptr->addFrame(current_time(), *cvt); },
+			cv::cvtColor(frame, cvt, cv::COLOR_BGR2RGB);
+			tracker_manager_ptr->addFrame(current_time(), cvt); },
 		tracker_manager);
 
 	while (true)
@@ -186,6 +193,7 @@ int main()
 				kSeeSoCalibrationAccuracyDefault);
 		}
 	}
+	camera_thread.join();
 	view->closeWindow();
 
 	return EXIT_SUCCESS;

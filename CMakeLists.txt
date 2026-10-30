@@ -2,6 +2,22 @@ cmake_minimum_required(VERSION 3.5)
 project(seeso_windows)
 
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+option(SEESO_SUPPORT_TESTS_ONLY "Build SDK-independent regression tests" OFF)
+if(SEESO_SUPPORT_TESTS_ONLY)
+    enable_testing()
+    add_executable(seeso_support_test tests/support_test.cpp priority_mutex.cc)
+    target_include_directories(seeso_support_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    add_test(NAME support COMMAND seeso_support_test)
+    return()
+endif()
+
+foreach(dependency opencv seeso)
+    if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${dependency}/CMakeLists.txt")
+        message(FATAL_ERROR "Missing ${dependency}/CMakeLists.txt: supply the SDK CMake wrapper described in README.md")
+    endif()
+endforeach()
 
 add_subdirectory(opencv)
 add_subdirectory(seeso)
@@ -14,9 +30,6 @@ add_executable(seeso_windows main.cpp
 
 target_link_libraries(seeso_windows PUBLIC opencv seeso)
 
-if (DEFINED SEESO_TEST_KEY)
-    ADD_DEFINITIONS(-DSEESO_TEST_KEY=${SEESO_TEST_KEY})
-endif()
 
 if(WIN32)
 # copy script will work only if cmake version >= 3.5
